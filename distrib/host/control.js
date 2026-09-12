@@ -42,6 +42,14 @@ var TSOS;
                 _GLaDOS = new Glados();
                 _GLaDOS.init();
             }
+            // Update the taskbar clock.
+            Control.updateDateTime();
+            setInterval(Control.updateDateTime, 1000);
+        }
+        static updateDateTime() {
+            var dateTime = document.getElementById("dateTime");
+            var now = new Date();
+            dateTime.innerHTML = now.toLocaleString();
         }
         static hostLog(msg, source = "?") {
             // Note the OS CLOCK.

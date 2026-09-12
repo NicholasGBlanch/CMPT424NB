@@ -20,29 +20,106 @@ var TSOS;
         krnKbdDriverEntry() {
             // Initialization routine for this, the kernel-mode Keyboard Device Driver.
             this.status = "loaded";
-            // More?
         }
         krnKbdDispatchKeyPress(params) {
-            // Parse the params.  TODO: Check that the params are valid and osTrapError if not.
             var keyCode = params[0];
             var isShifted = params[1];
             _Kernel.krnTrace("Key code:" + keyCode + " shifted:" + isShifted);
             var chr = "";
-            // Check to see if we even want to deal with the key that was pressed.
-            if ((keyCode >= 65) && (keyCode <= 90)) { // letter
+            // Letters A-Z
+            if ((keyCode >= 65) && (keyCode <= 90)) {
                 if (isShifted === true) {
-                    chr = String.fromCharCode(keyCode); // Uppercase A-Z
+                    chr = String.fromCharCode(keyCode);
                 }
                 else {
-                    chr = String.fromCharCode(keyCode + 32); // Lowercase a-z
+                    chr = String.fromCharCode(keyCode + 32);
                 }
-                // TODO: Check for caps-lock and handle as shifted if so.
                 _KernelInputQueue.enqueue(chr);
             }
-            else if (((keyCode >= 48) && (keyCode <= 57)) || // digits
-                (keyCode == 32) || // space
-                (keyCode == 13)) { // enter
+            // Numbers 0-9
+            else if ((keyCode >= 48) && (keyCode <= 57)) {
+                if (isShifted === true) {
+                    var shiftedNumbers = {
+                        48: ")",
+                        49: "!",
+                        50: "@",
+                        51: "#",
+                        52: "$",
+                        53: "%",
+                        54: "^",
+                        55: "&",
+                        56: "*",
+                        57: "("
+                    };
+                    chr = shiftedNumbers[keyCode];
+                }
+                else {
+                    chr = String.fromCharCode(keyCode);
+                }
+                _KernelInputQueue.enqueue(chr);
+            }
+            // Space
+            else if (keyCode == 32) {
                 chr = String.fromCharCode(keyCode);
+                _KernelInputQueue.enqueue(chr);
+            }
+            // Enter
+            else if (keyCode == 13) {
+                chr = String.fromCharCode(keyCode);
+                _KernelInputQueue.enqueue(chr);
+            }
+            // Backspace
+            else if (keyCode == 8) {
+                chr = String.fromCharCode(8);
+                _KernelInputQueue.enqueue(chr);
+            }
+            // Tab
+            else if (keyCode == 9) {
+                chr = String.fromCharCode(9);
+                _KernelInputQueue.enqueue(chr);
+            }
+            // Up Arrow
+            else if (keyCode == 38) {
+                _KernelInputQueue.enqueue("UP");
+            }
+            // Down Arrow
+            else if (keyCode == 40) {
+                _KernelInputQueue.enqueue("DOWN");
+            }
+            // Punctuation and symbols
+            else if ((keyCode >= 186) && (keyCode <= 222)) {
+                var normalChars = {
+                    186: ";",
+                    187: "=",
+                    188: ",",
+                    189: "-",
+                    190: ".",
+                    191: "/",
+                    192: "`",
+                    219: "[",
+                    220: "\\",
+                    221: "]",
+                    222: "'"
+                };
+                var shiftedChars = {
+                    186: ":",
+                    187: "+",
+                    188: "<",
+                    189: "_",
+                    190: ">",
+                    191: "?",
+                    192: "~",
+                    219: "{",
+                    220: "|",
+                    221: "}",
+                    222: "\""
+                };
+                if (isShifted === true) {
+                    chr = shiftedChars[keyCode];
+                }
+                else {
+                    chr = normalChars[keyCode];
+                }
                 _KernelInputQueue.enqueue(chr);
             }
         }

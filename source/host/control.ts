@@ -50,6 +50,16 @@ module TSOS {
                 _GLaDOS = new Glados();
                 _GLaDOS.init();
             }
+            // Update the taskbar clock.
+            Control.updateDateTime();
+            setInterval(Control.updateDateTime, 1000);
+        }
+        
+        public static updateDateTime(): void {
+            var dateTime = <HTMLElement>document.getElementById("dateTime");
+            var now = new Date();
+
+            dateTime.innerHTML = now.toLocaleString();
         }
 
         public static hostLog(msg: string, source: string = "?"): void {

@@ -149,7 +149,14 @@ var TSOS;
         }
         krnTrapError(msg) {
             TSOS.Control.hostLog("OS ERROR - TRAP: " + msg);
-            // TODO: Display error on console, perhaps in some sort of colored screen. (Maybe blue?)
+            // Create a blue screen of death.
+            _DrawingContext.fillStyle = "blue";
+            _DrawingContext.fillRect(0, 0, _Canvas.width, _Canvas.height);
+            _DrawingContext.fillStyle = "white";
+            _DrawingContext.font = "20px Arial";
+            _DrawingContext.fillText("FumOS has encountered a fatal error.", 30, 100);
+            _DrawingContext.fillText("ERROR: " + msg, 30, 140);
+            _DrawingContext.fillText("System halted.", 30, 180);
             this.krnShutdown();
         }
     }

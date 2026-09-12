@@ -21,8 +21,27 @@ var TSOS;
             var sc;
             //
             // Load the command list.
+            //
             // ver
             sc = new TSOS.ShellCommand(this.shellVer, "ver", "- Displays the current version data.");
+            this.commandList[this.commandList.length] = sc;
+            // date
+            sc = new TSOS.ShellCommand(this.shellDate, "date", "- Displays the current date and time.");
+            this.commandList[this.commandList.length] = sc;
+            // whereami
+            sc = new TSOS.ShellCommand(this.shellWhereAmI, "whereami", "- Displays the current location.");
+            this.commandList[this.commandList.length] = sc;
+            // insult
+            sc = new TSOS.ShellCommand(this.shellInsult, "insult", "- Gives the user a random insult.");
+            this.commandList[this.commandList.length] = sc;
+            // status
+            sc = new TSOS.ShellCommand(this.shellStatus, "status", "<string> - Sets the taskbar status message.");
+            this.commandList[this.commandList.length] = sc;
+            // bsod
+            sc = new TSOS.ShellCommand(this.shellBSOD, "bsod", "- Tests the FumOS blue screen of death.");
+            this.commandList[this.commandList.length] = sc;
+            // load
+            sc = new TSOS.ShellCommand(this.shellLoad, "load", "- Validates the program entered in User Program Input.");
             this.commandList[this.commandList.length] = sc;
             // help
             sc = new TSOS.ShellCommand(this.shellHelp, "help", "- This is the help command. Seek help.");
@@ -55,19 +74,11 @@ var TSOS;
         }
         handleInput(buffer) {
             _Kernel.krnTrace("Shell Command~" + buffer);
-            //
-            // Parse the input...
-            //
+            // Parse the input.
             var userCommand = this.parseInput(buffer);
-            // ... and assign the command and args to local variables.
+            // Assign the command and args to local variables.
             var cmd = userCommand.command;
             var args = userCommand.args;
-            //
-            // Determine the command and execute it.
-            //
-            // TypeScript/JavaScript may not support associative arrays in all browsers so we have to iterate over the
-            // command list in attempt to find a match. 
-            // TODO: Is there a better way? Probably. Someone work it out and tell me in class.
             var index = 0;
             var found = false;
             var fn = undefined;
@@ -81,49 +92,39 @@ var TSOS;
                 }
             }
             if (found) {
-                this.execute(fn, args); // Note that args is always supplied, though it might be empty.
+                this.execute(fn, args);
             }
             else {
-                // It's not found, so check for curses and apologies before declaring the command invalid.
-                if (this.curses.indexOf("[" + TSOS.Utils.rot13(cmd) + "]") >= 0) { // Check for curses.
+                if (this.curses.indexOf("[" + TSOS.Utils.rot13(cmd) + "]") >= 0) {
                     this.execute(this.shellCurse);
                 }
-                else if (this.apologies.indexOf("[" + cmd + "]") >= 0) { // Check for apologies.
+                else if (this.apologies.indexOf("[" + cmd + "]") >= 0) {
                     this.execute(this.shellApology);
                 }
-                else { // It's just a bad command. {
+                else {
                     this.execute(this.shellInvalidCommand);
                 }
             }
         }
-        // Note: args is an optional parameter, ergo the ? which allows TypeScript to understand that.
         execute(fn, args) {
-            // We just got a command, so advance the line...
             _StdOut.advanceLine();
-            // ... call the command function passing in the args with some über-cool functional programming ...
             fn(args);
-            // Check to see if we need to advance the line again
             if (_StdOut.currentXPosition > 0) {
                 _StdOut.advanceLine();
             }
-            // ... and finally write the prompt again.
             this.putPrompt();
         }
         parseInput(buffer) {
             var retVal = new TSOS.UserCommand();
-            // 1. Remove leading and trailing spaces.
+            // Remove leading and trailing spaces.
             buffer = TSOS.Utils.trim(buffer);
-            // 2. Lower-case it.
+            // Lower-case it.
             buffer = buffer.toLowerCase();
-            // 3. Separate on spaces so we can determine the command and command-line args, if any.
+            // Separate command and arguments.
             var tempList = buffer.split(" ");
-            // 4. Take the first (zeroth) element and use that as the command.
-            var cmd = tempList.shift(); // Yes, you can do that to an array in JavaScript. See the Queue class.
-            // 4.1 Remove any left-over spaces.
+            var cmd = tempList.shift();
             cmd = TSOS.Utils.trim(cmd);
-            // 4.2 Record it in the return value.
             retVal.command = cmd;
-            // 5. Now create the args array from what's left.
             for (var i in tempList) {
                 var arg = TSOS.Utils.trim(tempList[i]);
                 if (arg != "") {
@@ -133,8 +134,7 @@ var TSOS;
             return retVal;
         }
         //
-        // Shell Command Functions. Kinda not part of Shell() class exactly, but
-        // called from here, so kept here to avoid violating the law of least astonishment.
+        // Shell Command Functions
         //
         shellInvalidCommand() {
             _StdOut.putText("Invalid Command. ");
@@ -164,23 +164,71 @@ var TSOS;
                 _StdOut.putText("For what?");
             }
         }
-        // Although args is unused in some of these functions, it is always provided in the 
-        // actual parameter list when this function is called, so I feel like we need it.
         shellVer(args) {
-            _StdOut.putText(APP_NAME + " version " + APP_VERSION);
+            _StdOut.putText("FumOS version 1.0 - Nicholas Blanchard");
+        }
+        shellDate(args) {
+            var currentDate = new Date();
+            _StdOut.putText(currentDate.toLocaleString());
+        }
+        shellWhereAmI(args) {
+            _StdOut.putText("You are inside FumOS.");
+        }
+        shellInsult(args) {
+            var insults = [
+                "Unruly Beast",
+                "Leftovers",
+                "Impetuous Hound",
+                "Useless"
+            ];
+            var randomIndex = Math.floor(Math.random() * 4);
+            _StdOut.putText(insults[randomIndex]);
+        }
+        shellStatus(args) {
+            if (args.length > 0) {
+                var status = args.join(" ");
+                var statusText = document.getElementById("statusText");
+                statusText.innerHTML = "Status: " + status;
+            }
+            else {
+                _StdOut.putText("Usage: status <string>");
+            }
+        }
+        // Tests the kernel trap / blue screen of death.
+        shellBSOD(args) {
+            _Kernel.krnTrapError("Test BSOD");
+        }
+        // Validates the text entered in the User Program Input box.
+        shellLoad(args) {
+            var programInput = document.getElementById("taProgramInput").value;
+            // Remove spaces before checking the hexadecimal characters.
+            var programWithoutSpaces = programInput.replace(/ /g, "");
+            // No program was entered.
+            if (programWithoutSpaces.length === 0) {
+                _StdOut.putText("Error: No program entered.");
+            }
+            // Valid hexadecimal program.
+            else if (/^[0-9a-fA-F]+$/.test(programWithoutSpaces)) {
+                _StdOut.putText("Program input is valid.");
+            }
+            // Contains invalid characters.
+            else {
+                _StdOut.putText("Error: Program must contain only hexadecimal digits and spaces.");
+            }
         }
         shellHelp(args) {
             _StdOut.putText("Commands:");
             for (var i in _OsShell.commandList) {
                 _StdOut.advanceLine();
-                _StdOut.putText("  " + _OsShell.commandList[i].command + " " + _OsShell.commandList[i].description);
+                _StdOut.putText("  " +
+                    _OsShell.commandList[i].command +
+                    " " +
+                    _OsShell.commandList[i].description);
             }
         }
         shellShutdown(args) {
             _StdOut.putText("Shutting down...");
-            // Call Kernel shutdown routine.
             _Kernel.krnShutdown();
-            // TODO: Stop the final prompt from being displayed. If possible. Not a high priority. (Damn OCD!)
         }
         shellCls(args) {
             _StdOut.clearScreen();
@@ -193,7 +241,6 @@ var TSOS;
                     case "help":
                         _StdOut.putText("Help displays a list of (hopefully) valid commands.");
                         break;
-                    // TODO: Make descriptive MANual page entries for the the rest of the shell commands here.
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
                 }
@@ -229,8 +276,10 @@ var TSOS;
         }
         shellRot13(args) {
             if (args.length > 0) {
-                // Requires Utils.ts for rot13() function.
-                _StdOut.putText(args.join(' ') + " = '" + TSOS.Utils.rot13(args.join(' ')) + "'");
+                _StdOut.putText(args.join(' ') +
+                    " = '" +
+                    TSOS.Utils.rot13(args.join(' ')) +
+                    "'");
             }
             else {
                 _StdOut.putText("Usage: rot13 <string>  Please supply a string.");
