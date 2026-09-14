@@ -1,3 +1,9 @@
+Question 1:
+    The first thing that stood out to me while working on this project was how minute every issue was. Something like a backspace button or a scrolling screen isn't an function of importance because it seems almost prebuilt. Having to work on this allowed my brain to pay attention to smaller things instead of the bigger picture you usually (or maybe just me) think of when we make something like a website. This somewhat mirrors the "ancient" UNIX issues being small necessities, rather than the luxuries of working on big picture. Additionally, working on the project I was able to grasp the need for abstraction, as we focused on making the program more easy to use through secondary functions, rather than adding features to what the machine does proper. Options like erase processing and history lookup are just as important as adding the ability to insult the user at their whim. (Some would argue moreso..) The layers of abstraction through pressing on the physical keyboard, into the website, through the functional files running on Visual Code and then back to the website was novel, in its granularity. 
+
+
+
+
 2025 Browser-based Operating System in TypeScript
 =================================================
 
