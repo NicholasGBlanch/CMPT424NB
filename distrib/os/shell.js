@@ -198,22 +198,18 @@ var TSOS;
         shellBSOD(args) {
             _Kernel.krnTrapError("Test BSOD");
         }
-        // Validates the text entered in the User Program Input box.
+        // Loads the user program into memory and displays its PID.
         shellLoad(args) {
             var programInput = document.getElementById("taProgramInput").value;
-            // Remove spaces before checking the hexadecimal characters.
-            var programWithoutSpaces = programInput.replace(/ /g, "");
-            // No program was entered.
-            if (programWithoutSpaces.length === 0) {
-                _StdOut.putText("Error: No program entered.");
+            try {
+                var pcb = _MemoryManager.loadProgram(programInput);
+                _StdOut.putText("Program loaded. PID: " + pcb.pid);
             }
-            // Valid hexadecimal program.
-            else if (/^[0-9a-fA-F]+$/.test(programWithoutSpaces)) {
-                _StdOut.putText("Program input is valid.");
-            }
-            // Contains invalid characters.
-            else {
-                _StdOut.putText("Error: Program must contain only hexadecimal digits and spaces.");
+            catch (error) {
+                var message = error instanceof Error
+                    ? error.message
+                    : String(error);
+                _StdOut.putText("Error: " + message);
             }
         }
         shellHelp(args) {
