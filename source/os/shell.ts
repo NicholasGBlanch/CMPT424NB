@@ -86,6 +86,14 @@ module TSOS {
             );
             this.commandList[this.commandList.length] = sc;
 
+            // run
+            sc = new ShellCommand(
+                this.shellRun,
+                "run",
+                "<pid> - Runs the loaded program."
+            );
+            this.commandList[this.commandList.length] = sc;
+
             // help
             sc = new ShellCommand(
                 this.shellHelp,
@@ -335,6 +343,37 @@ module TSOS {
         // Tests the kernel trap / blue screen of death.
         public shellBSOD(args: string[]) {
             _Kernel.krnTrapError("Test BSOD");
+        }
+
+                public shellRun(args: string[]): void {
+            if (args.length !== 1 || !/^\d+$/.test(args[0])) {
+                _StdOut.putText("Usage: run <pid>");
+                return;
+            }
+
+            if (_CPU.isExecuting) {
+                _StdOut.putText("A program is already running.");
+                return;
+            }
+
+            var pid = Number(args[0]);
+            var pcb = _MemoryManager.currentPCB;
+
+            if (pcb === null || pcb.pid !== pid) {
+                _StdOut.putText("No loaded program with PID " + pid + ".");
+                return;
+            }
+
+            if (pcb.state !== "Resident") {
+                _StdOut.putText("Load the program again before running it.");
+                return;
+            }
+
+            _CPU.init();
+            pcb.state = "Running";
+            _CPU.isExecuting = true;
+
+            _StdOut.putText("Running PID " + pid + ".");
         }
 
                 // Loads the user program into memory and displays its PID.

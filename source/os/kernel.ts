@@ -121,6 +121,68 @@ module TSOS {
                     _krnKeyboardDriver.isr(params);   // Kernel mode device driver
                     _StdIn.handleInput();
                     break;
+
+                case SYSTEM_CALL_IRQ:
+                    try {
+                        var x = params[0];
+                        var y = params[1];
+
+                        if (x === 1) {
+                            _StdOut.putText(String(y));
+                        } else if (x === 2) {
+                            var text = "";
+                            var address = y;
+                            var character = _MemoryAccessor.read(address);
+
+                            while (character !== 0) {
+                                text += String.fromCharCode(character);
+                                address++;
+                                character = _MemoryAccessor.read(address);
+                            }
+
+                            _StdOut.putText(text);
+                        } else {
+                            throw new Error(
+                                "Unsupported system call: X = " + x
+                            );
+                        }
+                    } catch (error) {
+                        var message = error instanceof Error
+                            ? error.message
+                            : String(error);
+
+                        _StdOut.putText("Execution error: " + message);
+                        _CPU.isExecuting = false;
+
+                        _KernelInterruptQueue.enqueue(
+                            new Interrupt(PROCESS_EXIT_IRQ, [])
+                        );
+                    }
+                    break;
+
+                case PROCESS_EXIT_IRQ:
+                    _CPU.isExecuting = false;
+
+                    var pcb = _MemoryManager.currentPCB;
+
+                    if (pcb !== null) {
+                        pcb.PC = _CPU.PC;
+                        pcb.IR = _CPU.IR;
+                        pcb.Acc = _CPU.Acc;
+                        pcb.Xreg = _CPU.Xreg;
+                        pcb.Yreg = _CPU.Yreg;
+                        pcb.Zflag = _CPU.Zflag;
+                        pcb.state = "Terminated";
+
+                        this.krnTrace(
+                            "Process " + pcb.pid + " terminated."
+                        );
+                    }
+
+                    _StdOut.advanceLine();
+                    _OsShell.putPrompt();
+                    break;
+
                 default:
                     this.krnTrapError("Invalid Interrupt Request. irq=" + irq + " params=[" + params + "]");
             }
